@@ -6,23 +6,18 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 public class Starter {
 
+    public static final Executor EXECUTOR = Executors.newCachedThreadPool();
+
     public static void main(String[] args) throws IOException {
-        InputStream input = createSocket(System.getProperty("input")).getInputStream();
-        List<OutputStream> outputList = new ArrayList<OutputStream>();
-        for (String output : System.getProperty("output").split(",")) {
-            outputList.add(createSocket(output).getOutputStream());
-        }
-        byte[] buffer = new byte[64];
-        while (true) {
-            input.read(buffer);
-            for (OutputStream output : outputList) {
-                output.write(buffer);
-                output.flush();
-            }
-        }
+        Socket socket1 = createSocket(System.getProperty("host1"));
+        Socket socket2 = createSocket(System.getProperty("host2"));
+        createForwarder(socket1.getInputStream(), socket2.getOutputStream());
+        createForwarder(socket2.getInputStream(), socket1.getOutputStream());
     }
 
     private static Socket createSocket(String host) throws IOException {
@@ -34,5 +29,20 @@ public class Starter {
             int port = Integer.valueOf(_host[1]);
             return new Socket(hostName, port);
         }
+    }
+
+    private static void createForwarder(final InputStream inputStream, final OutputStream outputStream) {
+        EXECUTOR.execute(() -> {
+            byte[] buffer = new byte[64];
+            try {
+                while (true) {
+                    inputStream.read(buffer);
+                    outputStream.write(buffer);
+                    outputStream.flush();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
     }
 }

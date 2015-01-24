@@ -5,7 +5,7 @@ sourceCompatibility = 1.8
 version = '0.1.0'
 
 mainClassName = "kr.toolcat.tcp2tcp.main.Starter"
-applicationDefaultJvmArgs = ["-Dinput=" + tcp2tcp_input, "-Doutput=" + tcp2tcp_output]
+applicationDefaultJvmArgs = ["-Dhost1=" + host1, "-Dhost2=" + host2]
 
 repositories {
     jcenter()
